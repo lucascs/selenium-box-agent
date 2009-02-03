@@ -24,24 +24,7 @@ public class RemoteControlStartupServlet extends HttpServlet {
 		int port = Integer.parseInt(req.getParameter("portStart"));
 		int n = Integer.parseInt(req.getParameter("quantity"));
 		for (int i = 0; i < n; i++) {
-//			try {
-//				SelfRegisteringRemoteControlLauncher.main(new String[] {
-//					"-port", "" + (port + i),
-//					"-host", host,
-//					"-env", environment,
-//					"-hubURL", hubURL
-//				});
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
 			executor.execute(hubURL, environment, host, port+i);
-/*			SelfRegisteringRemoteControl remoteControl = new SelfRegisteringRemoteControl(hubURL, environment, host, "" + (port + i));
-			remoteControl.register();
-			try {
-				remoteControl.launch(new String[] {"-port", port + ""});
-			} catch (Exception e) {
-				e.printStackTrace();
-			}*/
 		}
 	}
 }
