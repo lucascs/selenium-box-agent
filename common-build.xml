@@ -1,0 +1,161 @@
+<project name="Selenium Grid Common Build Tasks">
+
+  <description>Selenium Grid Common Build Tasks</description>
+
+  <tstamp/>
+
+  <property name="build.src" location="src/main/java"/>
+  <property name="build.resources" location="src/main/resources"/>
+  <property name="build.output" location="target/classes"/>
+  <property name="dist" location="${basedir}/target/dist"/>
+  <property name="test.src" location="src/test/unit/java"/>
+  <property name="test.output" location="target/test-classes"/>
+  <property name="test.reports" location="target/test-reports"/>
+  <property name="metrics.reports" location="target/metrics"/>
+  <property name="metrics.pmd.reports" location="${metrics.reports}/pmd"/>
+  <property name="metrics.coverage.reports" location="${metrics.reports}/coverage"/>
+  <property environment="env"/>
+
+  <path id="junit.core.classpath">
+    <fileset dir="${rootdir}/lib">
+      <include name="junit-4.4.jar"/>
+    </fileset>
+    <pathelement location="${build.output}"/>
+    <pathelement path="${java.class.path}/"/>
+  </path>
+
+  <path id="junit.classpath" />
+  
+  <path id="testing.classpath">
+    <path refid="compile.classpath"/>
+    <path refid="junit.core.classpath"/>
+    <path refid="junit.classpath"/>
+    <pathelement location="${build.output}"/>
+    <pathelement location="${test.output}"/>
+  </path>
+
+  <target name="package-standalone" depends="package"/>
+  <target name="build" depends="test"/>
+  <target name="dist" depends="package-standalone"/>
+
+  <target name="clean" description="Remove generated artifacts">
+    <delete dir="target"/>
+  </target>
+
+  <target name="compile" description="compile the source ">
+    <mkdir dir="${build.output}"/>
+    <javac srcdir="${build.src}"
+           destdir="${build.output}"
+           debug="true"
+           source="1.5"
+           target="1.5">
+      <classpath refid="compile.classpath"/>
+    </javac>
+    <copy todir="${build.output}" verbose="true">
+      <fileset dir="${build.src}" includes="**/*.html"/>
+      <fileset dir="${build.src}" includes="**/*.yml"/>
+      <fileset dir="${build.resources}" includes="**/*.jar"/>
+    </copy>
+  </target>
+
+  <target name="compile-tests" depends="compile" description="compile tests">
+    <mkdir dir="${test.output}"/>
+    <mkdir dir="${test.reports}"/>
+
+    <javac srcdir="${test.src}"
+           destdir="${test.output}"
+           excludes="**/package.html"
+           source="1.5"
+           target="1.5"
+           debug="true"
+           deprecation="true">
+      <classpath refid="testing.classpath"/>
+    </javac>
+  </target>
+
+  <macrodef name="run-unit-tests">
+    <element name="options" optional="true"/>
+    <sequential>
+      <mkdir dir="${test.output}"/>
+      <mkdir dir="${test.reports}"/>
+
+      <copy todir="${test.output}" verbose="true">
+        <fileset dir="${test.src}" includes="**/*.html"/>
+      </copy>
+      <junit printSummary="no" haltonerror="true" haltonfailure="true" fork="true" dir="${test.reports}">
+        <options/>
+        <classpath refid="testing.classpath"/>
+        <formatter type="xml"/>
+        <formatter type="plain"/>
+        <batchtest todir="${test.reports}">
+          <fileset dir="${test.src}">
+            <include name="**/*Test.java"/>
+          </fileset>
+        </batchtest>
+      </junit>
+    </sequential>
+  </macrodef>
+
+  <target name="test" depends="compile, compile-tests" description="run tests">
+    <run-unit-tests/>
+  </target>
+  
+  <target name="package" depends="test" description="Package as a jar">
+    <mkdir dir="${dist}/lib"/>
+    <jar jarfile="${dist}/lib/${artifact}-${version}.jar" basedir="${build.output}">
+      <manifest>
+        <attribute name="Main-Class" value="br.com.caelum.selenium.grid.AgentServer"/>
+        <attribute name="Built-By" value="OpenQA.org"/>
+        <attribute name="Build-Time" value="${DSTAMP}${TSTAMP}"/>
+        <section name="common">
+          <attribute name="Specification-Title" value="${name}"/>
+          <attribute name="Specification-Version" value="${version}"/>
+          <attribute name="Specification-Vendor" value="OpenQA.org"/>
+        </section>
+      </manifest>
+    </jar>
+  </target>
+
+  <macrodef name="package-standalone-jar">
+    <attribute name="main-class"/>
+    <element name="dependencies" optional="yes"/>
+    <sequential>
+      <tstamp/>
+      <mkdir dir="${dist}/lib"/>
+      <jar jarfile="${dist}/lib/${artifact}-standalone-${version}.jar">
+        <manifest>
+          <attribute name="Main-Class" value="@{main-class}"/>
+          <attribute name="Built-By" value="OpenQA.org"/>
+          <attribute name="Build-Time" value="${DSTAMP}${TSTAMP}"/>
+          <section name="common">
+            <attribute name="Specification-Title" value="${name}"/>
+            <attribute name="Specification-Version" value="${version}"/>
+            <attribute name="Specification-Vendor" value="OpenQA.org"/>
+          </section>
+        </manifest>
+        <zipfileset src="${dist}/lib/${artifact}-${version}.jar"/>
+        <dependencies/>
+      </jar>
+    </sequential>
+  </macrodef>
+  
+  <macrodef name="build-subprojects">
+    <attribute name="target"/>
+    <sequential>
+      <subant target="@{target}">
+        <filelist dir=".">
+          <file name="infrastructure/core/build.xml"/>
+          <file name="infrastructure/webserver/build.xml"/>
+          <file name="hub/build.xml"/>
+          <file name="agent/build.xml"/>
+          <file name="remote-control/build.xml"/>
+          <file name="tools/build.xml"/>
+          <file name="demo/build.xml"/>
+          <file name="examples/java/build.xml"/>
+          <file name="regression-tests"/>
+        </filelist>
+      </subant>
+    </sequential>
+  </macrodef>
+
+</project>

@@ -1,0 +1,50 @@
+<project name="Selenium Grid Box Agent" default="package-standalone" basedir=".">
+
+  <description>Selenium Grid Box Agent</description>
+
+  <property name="rootdir" value="${basedir}"/>
+  <property file="${rootdir}/project.properties"/>
+  <property name="name" value="Selenium Grid Agent"/>
+  <property name="artifact" value="selenium-grid-agent"/>
+  <property name="version" value="SNAPSHOT"/>
+  <property name="selenium.version" value="Set Me"/>
+	
+	
+  <import file="${rootdir}/common-build.xml" />
+  <path id="compile.classpath">
+    <fileset dir="${rootdir}/lib">
+        <include name="jetty/jetty-6.0.2.jar"/>
+        <include name="jetty/jetty-util-6.0.2.jar"/>
+        <include name="jetty/servlet-api-2.5-6.1.5.jar"/>
+    </fileset>
+    <pathelement path="${java.class.path}/"/>
+  </path>
+  <path id="runtime.classpath">
+  	<fileset dir="${rootdir}/lib">
+        <include name="jetty/jetty-6.0.2.jar"/>
+        <include name="jetty/jetty-util-6.0.2.jar"/>
+        <include name="jetty/servlet-api-2.5-6.1.5.jar"/>
+      </fileset>
+      <pathelement location="${build.output}"/>
+    <pathelement path="${java.class.path}/"/>
+  </path>
+  
+  <target name="package-standalone" depends="package" description="Package as a jar including all dependencies">
+    <package-standalone-jar main-class="br.com.caelum.selenium.grid.AgentServer">
+      <dependencies>
+        <zipfileset src="${rootdir}/lib/jetty/jetty-6.0.2.jar"/>
+        <zipfileset src="${rootdir}/lib/jetty/jetty-util-6.0.2.jar"/>
+        <zipfileset src="${rootdir}/lib/jetty/servlet-api-2.5-6.1.5.jar"/>
+      </dependencies>
+    </package-standalone-jar>
+  </target>
+
+  <target name="run" description="Launch a remote control">
+    <java classpathref="runtime.classpath"
+          classname="br.com.caelum.selenium.grid.AgentServer"
+          fork="true"
+          failonerror="true">
+    </java>
+  </target>
+
+</project>
