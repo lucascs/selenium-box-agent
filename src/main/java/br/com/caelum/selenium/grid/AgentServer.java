@@ -1,12 +1,14 @@
 package br.com.caelum.selenium.grid;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.channels.FileChannel;
 
 
 public class AgentServer {
@@ -28,12 +30,13 @@ public class AgentServer {
 		URL url = AgentServer.class.getResource(x);
 		File jar = File.createTempFile("selenium", ".jar");
 		
-		FileOutputStream os = new FileOutputStream(jar);
-		FileInputStream is = new FileInputStream(url.getFile());
-		
-		FileChannel in = is.getChannel();
-		
-		in.transferTo(0, in.size(), os.getChannel());
+		OutputStream os = new BufferedOutputStream(new FileOutputStream(jar), 1024*1024);
+		InputStream is = new BufferedInputStream(url.openStream(), 1024*1024);
+		while (is.available() > 0) {
+			os.write(is.read());
+		}
+		os.close();
+		is.close();
 		return jar.toURI().toURL();
 	}
 }
